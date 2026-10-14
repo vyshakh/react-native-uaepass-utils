@@ -9,7 +9,6 @@
 import UIKit
 import WebKit
 
-@available(iOS 13.0, *)
 @objc public class UAEPassWebViewController: UIViewController, WKNavigationDelegate {
     
     @objc public var urlString: String!
@@ -18,7 +17,7 @@ import WebKit
     @objc public var onUAEPassFailureBlock: ((String) -> Void)? = nil
     @objc public var onSigningCompleted: (() -> Void)? = nil
     @objc public var onDismiss: (() -> Void)? = nil
-    @objc var webView: WKWebView?
+    @objc public var webView: WKWebView?
     var successURLR: String?
     var failureURLR: String?
     public var isSigning: Bool? = false
@@ -100,6 +99,14 @@ import WebKit
                 }
             }
             decisionHandler(.cancel, contentMode)
+        } else if urlString.contains("code=") {
+            if let url = url, let token = url.valueOf("code") {
+                if onUAEPassSuccessBlock != nil && !token.isEmpty {
+                    skipDismiss = true
+                    onUAEPassSuccessBlock?(urlString)
+                }
+            }
+            decisionHandler(.cancel, contentMode)
         } else if urlString.contains("uaepass://")  {
             // isUAEPassOpened = true
             let newURLString = urlString.replacingOccurrences(of: "uaepass://", with: UAEPASSRouter.shared.environmentConfig.uaePassSchemeURL)
@@ -168,7 +175,6 @@ import WebKit
 }
 
 // MARK: - ConfigrationInstanceProtocol
-@available(iOS 13.0, *)
 extension UAEPassWebViewController: ConfigrationInstanceProtocol {
     @objc public static func instantiate() -> NSObject {
         let bundle = Bundle.init(for: UAEPassWebViewController.self)
